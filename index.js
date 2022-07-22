@@ -43,17 +43,17 @@ app.get("/", async function(request,response){
 
 })
 
-app.use(function(req, res, next) {
-    res.header(
-      "Access-Control-Allow-Headers",
-      "x-access-token, Origin, Content-Type, Accept"
-    );
-    // res.setHeader("Access-Control-Allow-Origin","https://chimerical-salmiakki-4bb982.netlify.app");
-    // res.setHeader("Access-control-Allow-Methods", "GET, POST, PUT");
-    // res.setHeader("Access-Control-Allow-Headers", "X-Requested-With, content-type");
-    // res.setHeader("Access-Control-Allow-Credentials", true);
-    next();
-});
+// app.use(function(req, res, next) {
+//     res.header(
+//       "Access-Control-Allow-Headers",
+//       "x-access-token, Origin, Content-Type, Accept"
+//     );
+//     // res.setHeader("Access-Control-Allow-Origin","https://chimerical-salmiakki-4bb982.netlify.app");
+//     // res.setHeader("Access-control-Allow-Methods", "GET, POST, PUT");
+//     // res.setHeader("Access-Control-Allow-Headers", "X-Requested-With, content-type");
+//     // res.setHeader("Access-Control-Allow-Credentials", true);
+//     next();
+// });
 
 app.use("/user",userRouter);
 app.use("/questions",questionsRouter);
