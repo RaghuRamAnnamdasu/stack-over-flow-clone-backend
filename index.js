@@ -16,8 +16,14 @@ const app = express();
 // dotenv.config();
 // app.use(express.json());
 
+
 dotenv.config(); 
-app.use( cors({ origin: "*", }) );
+// app.use( cors({ origin: "*", }) );
+app.use(
+    cors({
+      origin: "*",
+    })
+  );
 app.use(express.json());
 
 const PORT = process.env.PORT;
