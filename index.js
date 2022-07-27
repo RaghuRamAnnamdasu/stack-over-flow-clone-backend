@@ -12,7 +12,7 @@ import nodemailer from "nodemailer";
 const app = express();
 
 
-// app.use(cors());
+app.use(cors());
 // dotenv.config();
 // app.use(express.json());
 
