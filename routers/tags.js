@@ -8,7 +8,7 @@ router.get("/", async function(req,res){
     const members = await client.db("stackOverFlow").collection("questions").aggregate([
         {$project:{tags:1, _id:0}}
     ]).toArray();
-    console.log(members);
+    // console.log(members);
     let temp = {};
     let count= 0;
     for(var i=0;i<members.length;i++){
@@ -20,7 +20,7 @@ router.get("/", async function(req,res){
             }
         }
     }
-    // console.log(temp);
+    console.log(temp);
 
     var tagsArray = Object.keys(temp);
     // console.log(tagsArray);
@@ -34,7 +34,13 @@ router.get("/", async function(req,res){
 })
 
 
-
+router.get("/:tagName", async function(req,res){
+    const {tagName} = req.params;
+    console.log(tagName);
+    const taggedQuestions = await client.db("stackOverFlow").collection("questions").find({tags : tagName}).toArray();
+    const tagDetails = await client.db("stackOverFlow").collection("tags").find({tagName : tagName}).toArray();
+    res.send([taggedQuestions,tagDetails]);
+})
 
 
 

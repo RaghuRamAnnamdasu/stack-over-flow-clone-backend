@@ -35,13 +35,16 @@ router.post('/signup', async function (req, res) {
   router.post('/login',async function (req, res) {
 
     
-
-
-    const {email,password} = req.body[0];
-    const userFromDB = await getUserByName(email);
-    const storedPassword = userFromDB.password;
-    const passwordMatch = await bcrypt.compare(password,storedPassword);
-    console.log(passwordMatch); 
+      const {email,password} = req.body[0];
+      const userFromDB = await getUserByName(email);
+      console.log(userFromDB);
+      var passwordMatch;
+      if(userFromDB){
+        const storedPassword = userFromDB.password;
+        passwordMatch = await bcrypt.compare(password,storedPassword);
+        console.log(passwordMatch);
+      }
+    
 
       if(!userFromDB){
         res.status(401).send({"message" : "Invalid Credentials"});
