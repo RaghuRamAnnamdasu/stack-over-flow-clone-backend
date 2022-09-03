@@ -3,6 +3,8 @@ import {createUSer, getUserByName} from "./helper.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import { client } from "../index.js";
+import {ObjectId} from "mongodb";
 
 const router = express.Router();
 
@@ -61,29 +63,53 @@ router.post('/signup', async function (req, res) {
 
 
 
-//   router.post('/forgotpassword', async function(req, res) {
-//     const {email} = req.body[0];
-//     const userFromDB = await getUserByName(email);
-//     console.log(userFromDB);
+  router.post('/forgotpassword', async function(req, res) {
+    console.log("entered in to forgotpassword route")
+    const {email} = req.body[0];
+    const userFromDB = await getUserByName(email);
+    console.log(userFromDB);
 
-//       if(!userFromDB){
-//         res.status(401).send({"message" : "Email does not exists"});
-//       }else{
-//        const secret = process.env.secretKey + userFromDB.password;
-//         const payload = {
-//             email : userFromDB.email,
-//             id : userFromDB._id,
-//         }
-//         const token = jwt.sign(payload,secret,{expiresIn: '15m'});
-//         const link = `http://localhost:3000/reset-password/${userFromDB._id}/${token}`;
-//         console.log(link);
-//         mailer("pravalika.kotta@gmail.com",link);
-//         res.send({"message" : "Password rest link has sent to your mail"});
-//       }
-//   })
+      if(!userFromDB){
+        res.status(401).send({"message" : "Email does not exists"});
+      }else{
+       const secret = process.env.secretKey + userFromDB.password;
+        const payload = {
+            email : userFromDB.email,
+            id : userFromDB._id
+        }
+        const token = jwt.sign(payload,secret,{expiresIn: '15m'});
+        const link = `${process.env.frontEndUrl}/users/reset-password/${userFromDB._id}/${token}`;
+        console.log(link);
+        mailer(email,link);
+        const result = await client.db("stackOverFlow").collection("users").updateOne({email : email},{$set : {resetToken : token}});
+        console.log(result);
+        res.send({"message" : "Password rest link has sent to your mail", result});
+      }
+  })
 
 
-    // router.post("/resetpassword/:id")
+    router.post("/resetPassword", async function(req,res){
+      try{
+        const {id, password, token} = req.body[0];
+        console.log(req.body[0],id, password, token);
+        const userDetails = await client.db("stackOverFlow").collection("users").find({_id : ObjectId(id)}).toArray();
+        console.log(userDetails);
+        const resetToken = userDetails[0].resetToken;
+
+        if(token === resetToken){
+          const hashedPassword = await genHashedPassword(password);
+          console.log("hashedPassword", hashedPassword)
+          const result = await client.db("stackOverFlow").collection("users").updateOne({_id : ObjectId(id)},{$set : {password : hashedPassword}});
+          res.send({message : "Successful Reset", result});
+        }else{
+          res.status(500).send({message : "Something went wrong / password link expired"});
+        }
+      }catch(error){
+        console.log(error);
+        res.send(error);
+      }
+
+    })
 
 
 
@@ -96,28 +122,29 @@ export const userRouter = router;
 
 
 
-//     function mailer(email,link){
-//     var transporter = nodemailer.createTransport({
-//         service: "outlook",
-//         auth: {
-//             user: "annamdasuraghuram@outlook.com",
-//             pass: process.env.password
-//         }
-//     });
-//     console.log("My pass: ",process.env.password);
-//     var mailOptions = {
-//         from: "annamdasuraghuram@outlook.com",
-//         to: email,
-//         subject: "Forgot Password - Stack Over Flow-Clone",
-//         text: "Hi User",
-//         html: "<div><h4>Hi User,<h4></br><p>please click the link below for password reset</p></br><a href={link}/> </div>"
-//     }
+    function mailer(email,link){
+    var transporter = nodemailer.createTransport({
+        service: "outlook",
+        auth: {
+            user: "annamdasuraghuram@outlook.com",
+            pass: process.env.password
+        }
+    });
+    console.log("My pass: ",process.env.password);
+    var mailOptions = {
+        from: "annamdasuraghuram@outlook.com",
+        to: email,
+        subject: "Reset Password - Stack Over Flow-Clone",
+        text: "Hi User",
+        // html: "<div><h4>Hi User,<h4></br><p>please click the link below for password reset</p></br><a href={link}/> </div>"
+        html: `please click the link to reset your password - ${link}`
+      }
 
-//     transporter.sendMail(mailOptions,function(error,info){
-//         if(error){
-//             console.log(error);
-//         }else{
-//             console.log(`Email sent:`+info.response)
-//         }
-//     })
-// }
+    transporter.sendMail(mailOptions,function(error,info){
+        if(error){
+            console.log(error);
+        }else{
+            console.log(`Email sent:`+info.response)
+        }
+    })
+}
