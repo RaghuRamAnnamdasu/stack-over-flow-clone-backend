@@ -15,7 +15,7 @@ async function genHashedPassword(password){
     return hashedPassword;
   }
 
-router.post('/signup', async function (req, res) {
+  router.post('/signup', async function (req, res) {
     const {email,password,displayName} = req.body[0];
     console.log(req.body);
     console.log(email,password,displayName);
@@ -89,37 +89,35 @@ router.post('/signup', async function (req, res) {
   })
 
 
-    router.post("/resetPassword", async function(req,res){
-      
-      const {id, password, token} = req.body[0];
-      console.log(req.body[0],id, password, token);
-      const userDetails = await client.db("stackOverFlow").collection("users").find({_id : ObjectId(id)}).toArray();
-      console.log(userDetails);
-      const resetToken = userDetails[0].resetToken;
+  router.post("/resetPassword", async function(req,res){
+    
+    const {id, password, token} = req.body[0];
+    console.log(req.body[0],id, password, token);
+    const userDetails = await client.db("stackOverFlow").collection("users").find({_id : ObjectId(id)}).toArray();
+    console.log(userDetails);
+    const resetToken = userDetails[0].resetToken;
 
-      jwt.verify(token,process.env.secretKey,async function(err,decodedData){
-        if(err){
-          console.log("error",err);
-          return res.status(401).send({message : "Authentication Error or Link expired"});
-        }else if(token === resetToken){
-          const hashedPassword = await genHashedPassword(password);
-          console.log("hashedPassword", hashedPassword)
-          const result = await client.db("stackOverFlow").collection("users").updateOne({_id : ObjectId(id)},{$set : {password : hashedPassword}});
-          res.send({message : "Successful Reset", result});
-        }
-      });
+    jwt.verify(token,process.env.secretKey,async function(err,decodedData){
+      if(err){
+        console.log("error",err);
+        return res.status(401).send({message : "Authentication Error or Link expired"});
+      }else if(token === resetToken){
+        const hashedPassword = await genHashedPassword(password);
+        console.log("hashedPassword", hashedPassword)
+        const result = await client.db("stackOverFlow").collection("users").updateOne({_id : ObjectId(id)},{$set : {password : hashedPassword}});
+        res.send({message : "Successful Reset", result});
+      }else{
+        res.status(401).send({message : "Authentication Error or Link got broken"})
+      }
+    });
 
-    })
+  })
 
 
 
 
 
 export const userRouter = router;
-
-
-
-
 
 
     function mailer(email,link){
