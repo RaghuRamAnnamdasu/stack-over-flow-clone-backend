@@ -72,12 +72,13 @@ router.post('/signup', async function (req, res) {
       if(!userFromDB){
         res.status(401).send({"message" : "Email does not exists"});
       }else{
-       const secret = process.env.secretKey + userFromDB.password;
+      //  const secret = process.env.secretKey + userFromDB.password;
+       const secret = process.env.secretKey;
         const payload = {
             email : userFromDB.email,
             id : userFromDB._id
         }
-        const token = jwt.sign(payload,secret,{expiresIn: '15m'});
+        const token = jwt.sign(payload,secret,{expiresIn: '1m'});
         const link = `${process.env.frontEndUrl}/users/reset-password/${userFromDB._id}/${token}`;
         console.log(link);
         mailer(email,link);
@@ -89,25 +90,37 @@ router.post('/signup', async function (req, res) {
 
 
     router.post("/resetPassword", async function(req,res){
-      try{
+      // try{
         const {id, password, token} = req.body[0];
         console.log(req.body[0],id, password, token);
         const userDetails = await client.db("stackOverFlow").collection("users").find({_id : ObjectId(id)}).toArray();
         console.log(userDetails);
         const resetToken = userDetails[0].resetToken;
 
-        if(token === resetToken){
-          const hashedPassword = await genHashedPassword(password);
-          console.log("hashedPassword", hashedPassword)
-          const result = await client.db("stackOverFlow").collection("users").updateOne({_id : ObjectId(id)},{$set : {password : hashedPassword}});
-          res.send({message : "Successful Reset", result});
-        }else{
-          res.status(500).send({message : "Something went wrong / password link expired"});
-        }
-      }catch(error){
-        console.log(error);
-        res.send(error);
-      }
+        jwt.verify(token,process.env.secretKey,async function(err,decodedData){
+          if(err){
+            console.log("error",err);
+            return res.status(401).send({message : "Authentication Error or Link expired"});
+          }else if(token === resetToken){
+            const hashedPassword = await genHashedPassword(password);
+            console.log("hashedPassword", hashedPassword)
+            const result = await client.db("stackOverFlow").collection("users").updateOne({_id : ObjectId(id)},{$set : {password : hashedPassword}});
+            res.send({message : "Successful Reset", result});
+          }
+        });
+
+      //   if(token === resetToken){
+      //     const hashedPassword = await genHashedPassword(password);
+      //     console.log("hashedPassword", hashedPassword)
+      //     const result = await client.db("stackOverFlow").collection("users").updateOne({_id : ObjectId(id)},{$set : {password : hashedPassword}});
+      //     res.send({message : "Successful Reset", result});
+      //   }else{
+      //     res.status(500).send({message : "Something went wrong / password link expired"});
+      //   }
+      // }catch(error){
+      //   console.log(error);
+      //   res.send(error);
+      // }
 
     })
 
