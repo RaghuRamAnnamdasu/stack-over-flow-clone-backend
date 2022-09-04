@@ -124,13 +124,13 @@ export const userRouter = router;
     var transporter = nodemailer.createTransport({
         service: "outlook",
         auth: {
-            user: "annamdasuraghuram@outlook.com",
+            user: "coderatwork@outlook.com",
             pass: process.env.password
         }
     });
     console.log("My pass: ",process.env.password);
     var mailOptions = {
-        from: "annamdasuraghuram@outlook.com",
+        from: "coderatwork@outlook.com",
         to: email,
         subject: "Reset Password - Stack Over Flow-Clone",
         text: "Hi User",
